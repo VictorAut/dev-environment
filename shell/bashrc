@@ -1,0 +1,81 @@
+#
+# The dev-environment bootstrap installs this file.
+#
+# This is a normal file. You can edit it. You do not need the bootstrap
+# repository after the installation. You can delete the repository.
+#
+
+# Run the settings below only in an interactive shell.
+case $- in
+  *i*) ;;
+    *) return;;
+esac
+
+# ---------------------------------------------------------------- oh-my-bash
+
+export OSH="${HOME}/.oh-my-bash"
+
+OSH_THEME="powerbash10k"
+THEME_SHOW_PYTHON=true
+PROMPT_DIRTRIM=5 # Show 5 directory levels. Then trim the root to "...".
+
+OMB_USE_SUDO=true
+
+# Completions are in ~/.oh-my-bash/completions/.
+# Your own completions are in ~/.oh-my-bash/custom/completions/.
+# Add few. Each completion makes the shell start more slowly.
+completions=(
+  git
+  composer
+  ssh
+)
+
+# Aliases are in ~/.oh-my-bash/aliases/ and ~/.oh-my-bash/custom/aliases/.
+aliases=(
+  general
+)
+
+# Plugins are in ~/.oh-my-bash/plugins/ and ~/.oh-my-bash/custom/plugins/.
+plugins=(
+  git
+  bashmarks
+)
+
+# Check the file first. The shell must still work if oh-my-bash is missing.
+if [[ -r "${OSH}/oh-my-bash.sh" ]]; then
+  source "${OSH}/oh-my-bash.sh"
+fi
+
+# Replace the powerbash10k prompt. This version adds an empty line at the end.
+function __pb10k_ps1 {
+  printf "\n%s%s%s" "$(__pb10k_top)" "$(__pb10k_bottom)" "$_omb_prompt_normal"
+}
+
+# ------------------------------------------------------------- user config
+
+# mise and uv install tools in this directory.
+if [[ ":${PATH}:" != *":${HOME}/.local/bin:"* ]]; then
+  export PATH="${HOME}/.local/bin:${PATH}"
+fi
+
+# Do not create __pycache__ directories in the source code.
+export PYTHONDONTWRITEBYTECODE=1
+
+# uv manages the Python versions on this machine. This setting stops uv from
+# using a system Python instead.
+export UV_PYTHON_PREFERENCE=only-managed
+
+export EDITOR="${EDITOR:-vim}"
+
+# Put settings for this machine only in ~/.bashrc.local. For example: tokens,
+# proxies, or local paths. The bootstrap never changes that file.
+if [[ -r "${HOME}/.bashrc.local" ]]; then
+  source "${HOME}/.bashrc.local"
+fi
+
+# ------------------------------------------------------------------- mise
+# Keep this last. mise adds its tools to the start of PATH.
+
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi

@@ -22,3 +22,6 @@ mise.local.toml
 # Editors
 .vscode/
 .idea/
+
+# Tooling state
+.memsearch/
