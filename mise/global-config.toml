@@ -1,0 +1,13 @@
+#
+# Your global mise configuration, at ~/.config/mise/config.toml.
+#
+# These tools work in every directory. A project can still pin its own
+# version in its own mise.toml, and that version wins inside the project.
+#
+# Keep this list the same as the [tools] section in the bootstrap mise.toml.
+#
+
+[tools]
+uv = "latest"
+gh = "latest"
+node = "lts"

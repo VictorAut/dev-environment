@@ -58,6 +58,9 @@ ask_identity() {
     echo "    ${label}: written to ${file}"
 }
 
+# The identity rules below point at these directories.
+mkdir -p -- "${HOME}/personal" "${HOME}/work"
+
 echo "==> Git identities"
 
 ask_identity "Personal" "${PERSONAL_FILE}"

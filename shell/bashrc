@@ -74,8 +74,6 @@ if [[ -r "${HOME}/.bashrc.local" ]]; then
 fi
 
 # ------------------------------------------------------------------- mise
-# Keep this last. mise adds its tools to the start of PATH.
-
-if command -v mise >/dev/null 2>&1; then
-  eval "$(mise activate bash)"
-fi
+#
+# mise adds its own block below this line, between markers. Do not add a
+# "mise activate" line here by hand. You would then activate it twice.

@@ -1,41 +1,18 @@
 #!/usr/bin/env bash
 #
-# Set up VS Code inside WSL.
+# Install the VS Code extensions listed in vscode/extensions.txt.
 #
-# VS Code runs on Windows. It installs a server in WSL, in ~/.vscode-server.
-# The settings and extensions of that server belong to this Linux machine,
-# so the bootstrap can install them.
+# The settings file is not installed here. mise copies it, as a dotfile.
 #
-# The "code" command comes from the Windows installation. It exists only
-# after VS Code connects to this WSL instance one time. If it is missing,
-# this script installs the settings and skips the extensions.
+# The "code" command comes from the Windows installation of VS Code. It
+# exists only after VS Code connects to this WSL instance one time. If it
+# is missing, this script does nothing and says so.
 #
 set -euo pipefail
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-MACHINE_DIR="${HOME}/.vscode-server/data/Machine"
-TARGET="${MACHINE_DIR}/settings.json"
-SOURCE="${REPO_ROOT}/vscode/settings.json"
 EXTENSIONS="${REPO_ROOT}/vscode/extensions.txt"
 
-echo "==> VS Code settings"
-
-mkdir -p -- "${MACHINE_DIR}"
-
-if [[ -f "${TARGET}" ]] && cmp -s -- "${SOURCE}" "${TARGET}"; then
-    echo "    Already up to date."
-else
-    if [[ -e "${TARGET}" ]]; then
-        backup="${TARGET}.backup.$(date +%Y%m%d%H%M%S)"
-        echo "    Old file moved to ${backup}"
-        mv -- "${TARGET}" "${backup}"
-    fi
-
-    cp -- "${SOURCE}" "${TARGET}"
-    echo "    Installed ${TARGET}"
-fi
-
-echo
 echo "==> VS Code extensions"
 
 if ! command -v code >/dev/null 2>&1; then

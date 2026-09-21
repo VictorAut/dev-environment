@@ -1,0 +1,137 @@
+#
+# Machine setup, declared once and applied by "mise bootstrap".
+#
+# Run it on a new machine with:
+#
+#     mise bootstrap --from https://github.com/VictorAut/dev-environment.git \
+#         --force-dotfiles
+#
+# mise runs the sections below in a fixed order: packages, repositories,
+# dotfiles, shell activation, tools, then the bootstrap task.
+#
+# Preview everything without changing the machine:
+#
+#     mise bootstrap --from ... --dry-run
+#
+
+# The [bootstrap] and [dotfiles] sections are recent. An older mise ignores
+# them and prints "unknown field", which would silently set up nothing. A
+# hard minimum turns that into a clear error with upgrade instructions.
+min_version = "2026.9.12"
+
+# ---------------------------------------------------------------------------
+# System packages
+#
+# The hook runs first. It adds the Docker package repository, because apt
+# cannot find docker-ce without it.
+# ---------------------------------------------------------------------------
+
+[bootstrap.hooks.pre-packages]
+run = "{{ config_root }}/scripts/add-docker-repo.sh"
+
+[bootstrap.packages]
+# Base
+"apt:ca-certificates" = "latest"
+"apt:curl" = "latest"
+"apt:git" = "latest"
+"apt:unzip" = "latest"
+"apt:vim" = "latest"
+
+# Compilers. Some Python packages build from source during installation.
+"apt:build-essential" = "latest"
+"apt:pkg-config" = "latest"
+
+# Libraries that common Python packages need in order to build.
+"apt:libssl-dev" = "latest"
+"apt:libffi-dev" = "latest"
+"apt:zlib1g-dev" = "latest"
+"apt:libsqlite3-dev" = "latest"
+"apt:libxml2-dev" = "latest"
+"apt:libxslt1-dev" = "latest"
+"apt:libxmlsec1-dev" = "latest"
+
+# Docker Engine. Docker Desktop is not needed.
+"apt:docker-ce" = "latest"
+"apt:docker-ce-cli" = "latest"
+"apt:containerd.io" = "latest"
+"apt:docker-buildx-plugin" = "latest"
+"apt:docker-compose-plugin" = "latest"
+
+# ---------------------------------------------------------------------------
+# Repositories
+# ---------------------------------------------------------------------------
+
+[bootstrap.repos]
+"~/.oh-my-bash" = { url = "https://github.com/ohmybash/oh-my-bash.git" }
+
+# ---------------------------------------------------------------------------
+# Dotfiles
+#
+# mode = "copy" is important. The default mode is "symlink", which would tie
+# these files to this checkout. A copy keeps working after you delete it.
+# ---------------------------------------------------------------------------
+
+[dotfiles]
+"~/.bashrc" = { source = "shell/bashrc", mode = "copy" }
+"~/.config/mise/config.toml" = { source = "mise/global-config.toml", mode = "copy" }
+"~/.vscode-server/data/Machine/settings.json" = { source = "vscode/settings.json", mode = "copy" }
+
+# ---------------------------------------------------------------------------
+# Shell activation
+#
+# mise writes its own marked block at the end of ~/.bashrc. It owns only the
+# text between the markers, so the rest of the file is left alone.
+# ---------------------------------------------------------------------------
+
+[bootstrap.mise_shell_activate]
+bashrc = "activate"
+
+# ---------------------------------------------------------------------------
+# Privileged files
+#
+# systemd must be on, or the docker service does not start by itself.
+# A WSL restart is needed before this takes effect.
+# ---------------------------------------------------------------------------
+
+[bootstrap.files."/etc/wsl.conf"]
+source = "wsl/wsl.conf"
+owner = "root"
+group = "root"
+mode = "0644"
+
+# ---------------------------------------------------------------------------
+# Tools
+#
+# This list is also in mise/global-config.toml, which becomes your global
+# mise configuration. Keep the two lists the same. The copy here is what
+# bootstrap installs. The global copy is what keeps the tools on PATH in
+# every directory, and after you delete this repository.
+#
+# Python is not here. uv installs Python. See scripts/install-pythons.sh.
+# ---------------------------------------------------------------------------
+
+[tools]
+uv = "latest"
+gh = "latest"
+node = "lts"   # "lts" tracks the newest even-numbered (long-term) release
+
+# ---------------------------------------------------------------------------
+# Steps that cannot be declared
+#
+# These need a terminal, or they work out what to do while they run.
+# The task runs on every bootstrap, so each script checks its own result
+# before it changes anything.
+# ---------------------------------------------------------------------------
+
+[tasks.bootstrap]
+description = "Run the steps that need a terminal"
+run = [
+    "{{ config_root }}/scripts/install-pythons.sh",
+    "{{ config_root }}/scripts/setup-docker.sh",
+    "{{ config_root }}/scripts/setup-git.sh",
+    "{{ config_root }}/scripts/setup-ssh.sh",
+    "{{ config_root }}/scripts/install-vscode.sh",
+]
+
+[bootstrap.hooks.final]
+run = "{{ config_root }}/scripts/verify.sh"

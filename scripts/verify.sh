@@ -64,10 +64,18 @@ else
     fail "oh-my-bash is missing"
 fi
 
-if grep -q 'mise activate bash' "${HOME}/.bashrc" 2>/dev/null; then
+# mise writes a marked block into ~/.bashrc. Check for the block, not for
+# a line, so a renamed command still passes.
+if grep -q 'mise:activate' "${HOME}/.bashrc" 2>/dev/null; then
     echo "    .bashrc activates mise"
 else
     fail ".bashrc does not activate mise. New shells will not find the tools."
+fi
+
+if [[ -f "${HOME}/.config/mise/config.toml" ]]; then
+    echo "    Global mise config installed"
+else
+    fail "no ~/.config/mise/config.toml. Tools will not work outside a project."
 fi
 
 echo
