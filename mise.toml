@@ -1,0 +1,16 @@
+[tools]
+uv = "latest"
+python = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+
+[bootstrap.packages]
+"apt:ca-certificates" = "latest"
+"apt:curl" = "latest"
+"apt:git" = "latest"
+"apt:build-essential" = "latest"
+
+[bootstrap.mise_shell_activate]
+bashrc = "activate"
+
+[tasks.bootstrap]
+description = "Verify the development environment"
+run = "{{ config_root }}/scripts/verify.sh"
