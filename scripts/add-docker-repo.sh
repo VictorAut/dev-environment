@@ -2,22 +2,26 @@
 #
 # Add the Docker package repository.
 #
-# mise installs the docker packages itself, from [bootstrap.packages]. But
-# apt cannot find them until this repository is added, so this script runs
-# in the "pre-packages" phase.
+# mise installs the docker packages from [bootstrap.packages]. But apt
+# cannot find them until this repository is added. So this script runs in
+# the "pre-packages" phase, before apt installs anything.
 #
-# The GPG key is downloaded instead of stored in this repository, because
-# Docker replaces the key from time to time.
+# The script downloads the signing key. It does not keep a copy in this
+# repository, because Docker replaces the key from time to time.
 #
 set -euo pipefail
+
+STAGE="DOCKER"
+# shellcheck source=lib.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 
 KEYRING="/etc/apt/keyrings/docker.asc"
 LIST="/etc/apt/sources.list.d/docker.list"
 
-echo "==> Docker package repository"
+stage "Package repository"
 
 if [[ -f "${KEYRING}" && -f "${LIST}" ]]; then
-    echo "    Already added."
+    info "already added"
     exit 0
 fi
 
@@ -35,4 +39,4 @@ https://download.docker.com/linux/ubuntu ${codename} stable" \
 
 sudo apt-get update
 
-echo "    Added for ${codename} (${arch})."
+info "added for ${codename} (${arch})"

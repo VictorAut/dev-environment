@@ -4,7 +4,10 @@
 # Run it on a new machine with:
 #
 #     mise bootstrap --from https://github.com/VictorAut/dev-environment.git \
-#         --force-dotfiles
+#         --yes --force-dotfiles
+#
+# --yes answers every question with yes. Without it, mise stops and asks
+# before it installs packages, writes system files, and writes dotfiles.
 #
 # mise runs the sections below in a fixed order: packages, repositories,
 # dotfiles, shell activation, tools, then the bootstrap task.
@@ -79,12 +82,15 @@ run = "{{ config_root }}/scripts/add-docker-repo.sh"
 # ---------------------------------------------------------------------------
 # Shell activation
 #
-# mise writes its own marked block at the end of ~/.bashrc. It owns only the
-# text between the markers, so the rest of the file is left alone.
+# There is no [bootstrap.mise_shell_activate] section here, on purpose.
+#
+# That section writes a marked block into ~/.bashrc. But the [dotfiles]
+# section above already owns the whole of ~/.bashrc. One file cannot have
+# two owners. mise drops the block and says nothing, and then no new shell
+# finds any tool.
+#
+# So the activation line lives in shell/bashrc instead, at the end.
 # ---------------------------------------------------------------------------
-
-[bootstrap.mise_shell_activate]
-bashrc = "activate"
 
 # ---------------------------------------------------------------------------
 # Privileged files

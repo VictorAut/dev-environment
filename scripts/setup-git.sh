@@ -2,33 +2,25 @@
 #
 # Set the git identity.
 #
-# Git chooses the identity from the directory of the repository:
+# Git picks the identity from the location of the repository:
 #
 #   ~/personal/...  uses the personal name and email
 #   ~/work/...      uses the work name and email
 #
-# This happens through "includeIf" rules in ~/.gitconfig. Git reads the path
-# of the repository and loads the matching file. You do not need to set
-# anything for each repository.
+# This works through "includeIf" rules in ~/.gitconfig. Git reads the path
+# of the repository and loads the file that matches. You never set an
+# identity for a single repository.
 #
 set -euo pipefail
+
+STAGE="GIT"
+# shellcheck source=lib.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 
 PERSONAL_FILE="${HOME}/.gitconfig-personal"
 WORK_FILE="${HOME}/.gitconfig-work"
 
 interactive() { [[ -t 0 ]]; }
-
-write_identity() {
-    local file="$1"
-    local name="$2"
-    local email="$3"
-
-    cat > "${file}" <<EOF
-[user]
-    name = ${name}
-    email = ${email}
-EOF
-}
 
 ask_identity() {
     local label="$1"
@@ -37,12 +29,12 @@ ask_identity() {
     local email
 
     if [[ -f "${file}" ]]; then
-        echo "    ${label}: already set in ${file}"
+        info "${label}: already set in ${file}"
         return 0
     fi
 
     if ! interactive; then
-        echo "    ${label}: no terminal available. Create ${file} later."
+        info "${label}: no terminal. Make ${file} later."
         return 0
     fi
 
@@ -50,52 +42,51 @@ ask_identity() {
     read -r -p "    ${label} email: " email
 
     if [[ -z "${name}" || -z "${email}" ]]; then
-        echo "    ${label}: skipped."
+        info "${label}: skipped"
         return 0
     fi
 
-    write_identity "${file}" "${name}" "${email}"
-    echo "    ${label}: written to ${file}"
+    cat > "${file}" <<EOF
+[user]
+    name = ${name}
+    email = ${email}
+EOF
+
+    info "${label}: written to ${file}"
 }
 
-# The identity rules below point at these directories.
+# The rules below point at these directories.
 mkdir -p -- "${HOME}/personal" "${HOME}/work"
 
-echo "==> Git identities"
+stage "Identities"
 
 ask_identity "Personal" "${PERSONAL_FILE}"
 ask_identity "Work" "${WORK_FILE}"
 
-echo
-echo "==> Directory rules"
+stage "Directory rules"
 
-# The personal identity is also the default, for repositories that are
-# outside both directories.
+# The personal identity is also the default. It covers repositories that
+# are in neither directory.
 if [[ -f "${PERSONAL_FILE}" ]]; then
     git config --global include.path "${PERSONAL_FILE}"
-    echo "    Default identity: personal"
-fi
-
-# The path must end with a slash. Git then matches every repository below it.
-if [[ -f "${PERSONAL_FILE}" ]]; then
     git config --global "includeIf.gitdir:~/personal/.path" "${PERSONAL_FILE}"
-    echo "    ~/personal/ -> personal identity"
+
+    info "default     personal"
+    info "~/personal  personal"
 fi
 
+# The path must end with a slash. Git then matches every repository below
+# that directory.
 if [[ -f "${WORK_FILE}" ]]; then
     git config --global "includeIf.gitdir:~/work/.path" "${WORK_FILE}"
-    echo "    ~/work/     -> work identity"
+    info "~/work      work"
 fi
 
-echo
-echo "==> Git defaults"
+stage "Defaults"
 
-# These remove the warnings that git prints on a new machine.
+# These remove the messages that git prints on a new machine.
 git config --global init.defaultBranch main
 git config --global pull.rebase true
 
-echo "    init.defaultBranch  main"
-echo "    pull.rebase         true"
-
-echo
-echo "==> Git setup complete"
+info "init.defaultBranch  main"
+info "pull.rebase         true"

@@ -2,22 +2,24 @@
 #
 # Set up a fresh Ubuntu WSL environment.
 #
-# Almost everything is declared in mise.toml. This script only installs
-# mise, then asks mise to apply that configuration.
+# Almost everything is declared in mise.toml. This script installs mise,
+# then asks mise to apply that file.
 #
 # You do not need this script if you start from the network:
 #
 #     curl -fsSL https://mise.run | sh
-#     ~/.local/bin/mise bootstrap --from <this repository url> --force-dotfiles
+#     ~/.local/bin/mise bootstrap --from <repository url> --yes --force-dotfiles
 #
-# Use this script when you have already cloned the repository.
+# Use this script when you already cloned the repository.
 #
 set -euo pipefail
 
+STAGE="BOOTSTRAP"
+# shellcheck source=scripts/lib.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/scripts/lib.sh"
+
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 MISE_BIN="${HOME}/.local/bin/mise"
-
-export PATH="${HOME}/.local/bin:${PATH}"
 
 if [[ "${EUID}" -eq 0 ]]; then
     echo "Do not run this script as root. It uses sudo when it needs to." >&2
@@ -29,34 +31,34 @@ if ! command -v apt-get >/dev/null 2>&1; then
     exit 1
 fi
 
-echo "==> Checking sudo access"
-sudo -v
+stage "Checking sudo access"
 
-echo
-echo "==> Installing mise"
+sudo -v
+info "ok"
+
+stage "Installing mise"
 
 if [[ -x "${MISE_BIN}" ]]; then
-    echo "    Already installed."
+    info "already installed"
 else
-    # -f makes curl fail on an HTTP error. Without it, an error page would
-    # be piped into the shell.
+    # -f makes curl stop on an HTTP error. Without it, an error page goes
+    # into the shell.
     curl -fsSL https://mise.run | sh
 fi
 
-"${MISE_BIN}" --version
+info "$("${MISE_BIN}" --version)"
 
-echo
-echo "==> Applying mise.toml"
+stage "Applying mise.toml"
 
 cd -- "${REPO_ROOT}"
 "${MISE_BIN}" trust --yes
 
-# --force-dotfiles replaces the stock ~/.bashrc that Ubuntu ships. Without
-# it, mise stops rather than overwrite a file it does not own.
+# --yes answers every question with yes, so the setup does not stop.
+# --force-dotfiles lets mise replace the ~/.bashrc that Ubuntu ships.
+# Without it, mise stops rather than change a file it does not own.
 "${MISE_BIN}" bootstrap --yes --force-dotfiles "$@"
 
-echo
-echo "==> Bootstrap complete"
-echo
-echo "    Open a new shell."
-echo "    Then run 'wsl --shutdown' in Windows PowerShell, for Docker."
+stage "Finished"
+
+info "open a new shell"
+info "then run 'wsl --shutdown' in Windows PowerShell, for Docker"

@@ -17,12 +17,17 @@ Set up the font first (see the next section), then run two commands:
 curl -fsSL https://mise.run | sh
 ~/.local/bin/mise bootstrap \
     --from https://github.com/VictorAut/dev-environment.git \
+    --yes \
     --force-dotfiles
 ```
 
-`--from` clones the repository into mise's own data directory, so nothing
-lands in your home directory. `--force-dotfiles` allows mise to replace the
-stock `~/.bashrc` that Ubuntu ships.
+Each flag does one thing:
+
+| Flag | What it does |
+|---|---|
+| `--from` | clones the repository into mise's own data directory, so nothing lands in your home directory |
+| `--yes` | answers every question with yes, so the setup runs without stopping |
+| `--force-dotfiles` | lets mise replace the `~/.bashrc` that Ubuntu ships. Without it, mise stops rather than change a file it does not own |
 
 To see what would happen, and change nothing, add `--dry-run`.
 
@@ -164,7 +169,7 @@ one. In VS Code on Windows, open Settings and set:
 | Global mise config | `[dotfiles]` | copied from `mise/global-config.toml` |
 | VS Code settings | `[dotfiles]` | copied from `vscode/settings.json` |
 | `/etc/wsl.conf` | `[bootstrap.files]` | turns on systemd |
-| mise activation | `[bootstrap.mise_shell_activate]` | a marked block in `~/.bashrc` |
+| mise activation | `shell/bashrc` | the last line of the copied `~/.bashrc` |
 | `uv`, `gh`, `node` | `[tools]` | |
 | Python 3.10 to latest | `scripts/install-pythons.sh` | the version list is found at run time |
 | Git identities | `scripts/setup-git.sh` | different email in `~/personal` and `~/work` |

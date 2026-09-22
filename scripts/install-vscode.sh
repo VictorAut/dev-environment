@@ -2,28 +2,32 @@
 #
 # Install the VS Code extensions listed in vscode/extensions.txt.
 #
-# The settings file is not installed here. mise copies it, as a dotfile.
+# The settings file is not installed here. mise copies it as a dotfile.
 #
-# The "code" command comes from the Windows installation of VS Code. It
-# exists only after VS Code connects to this WSL instance one time. If it
-# is missing, this script does nothing and says so.
+# The "code" command comes from VS Code on Windows. It exists only after
+# VS Code connects to this WSL instance one time. If it is missing, this
+# script does nothing and says so.
 #
 set -euo pipefail
+
+STAGE="VSCODE"
+# shellcheck source=lib.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 EXTENSIONS="${REPO_ROOT}/vscode/extensions.txt"
 
-echo "==> VS Code extensions"
+stage "Extensions"
 
 if ! command -v code >/dev/null 2>&1; then
-    echo "    The 'code' command is not available yet."
-    echo "    Connect VS Code to this WSL instance first, then run:"
-    echo "        ${BASH_SOURCE[0]}"
+    info "the 'code' command is not available yet"
+    info "connect VS Code to this WSL instance, then run:"
+    info "    ${BASH_SOURCE[0]}"
     exit 0
 fi
 
-# Ask VS Code once which extensions it already has. Asking for each one is
-# slow, because every call starts the whole server.
+# Ask VS Code once for the list it already has. Asking for each extension
+# is slow, because every call starts the whole server.
 mapfile -t installed < <(code --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')
 
 is_installed() {
@@ -38,7 +42,7 @@ is_installed() {
 }
 
 while read -r extension; do
-    # Drop comments and empty lines.
+    # Remove comments and empty lines.
     extension="${extension%%#*}"
     extension="${extension// /}"
 
@@ -52,6 +56,3 @@ while read -r extension; do
         printf '    FAILED  %s\n' "${extension}"
     fi
 done < "${EXTENSIONS}"
-
-echo
-echo "==> VS Code setup complete"

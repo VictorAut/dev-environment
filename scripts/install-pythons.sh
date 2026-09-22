@@ -1,28 +1,32 @@
 #!/usr/bin/env bash
 #
-# Install every stable CPython from MIN_MINOR up to the latest stable release.
+# Install every stable CPython from MIN_MINOR up to the newest stable one.
 #
-# The version list is discovered at runtime from uv, so nothing here needs
-# editing when a new Python is released.
+# The list comes from uv while the script runs. Nothing here needs an edit
+# when a new Python comes out.
 #
 set -euo pipefail
+
+STAGE="PYTHON"
+# shellcheck source=lib.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 
 MIN_MINOR=10
 
 if ! command -v uv >/dev/null 2>&1; then
-    echo "error: uv is not on PATH. Run bootstrap.sh first." >&2
+    fail "uv is not on PATH. Run the bootstrap first."
     exit 1
 fi
 
-echo "==> Discovering available Python versions"
+stage "Finding the available versions"
 
-# uv prints one line per build, for example:
+# uv prints one line for each build:
 #   cpython-3.13.7-linux-x86_64-gnu                 <download available>
 #   cpython-3.15.0a1-linux-x86_64-gnu               <download available>
 #   cpython-3.13.7+freethreaded-linux-x86_64-gnu    <download available>
 #
-# The pattern below requires digits-dot-digits-dot-digits followed by "-", so
-# pre-releases (3.15.0a1) and variant builds (+freethreaded) are dropped.
+# The pattern needs digits.digits.digits and then "-". So it drops test
+# releases (3.15.0a1) and special builds (+freethreaded).
 mapfile -t minors < <(
     uv python list --all-versions \
         | grep -oE '(^|[[:space:]])cpython-3\.[0-9]+\.[0-9]+-' \
@@ -31,8 +35,8 @@ mapfile -t minors < <(
 )
 
 if [[ ${#minors[@]} -eq 0 ]]; then
-    echo "error: could not parse any Python versions from 'uv python list'." >&2
-    echo "       Run it by hand to see what changed." >&2
+    fail "found no Python version in the output of 'uv python list'."
+    fail "run that command by hand to see what changed."
     exit 1
 fi
 
@@ -45,28 +49,25 @@ for minor in "${minors[@]}"; do
 done
 
 if [[ ${#wanted[@]} -eq 0 ]]; then
-    echo "error: no Python >= 3.${MIN_MINOR} available." >&2
+    fail "no Python 3.${MIN_MINOR} or newer is available."
     exit 1
 fi
 
 latest="${wanted[-1]}"
 
-echo "    Stable versions: ${wanted[*]}"
-echo "    Latest stable:   ${latest}"
+info "stable versions: ${wanted[*]}"
+info "newest stable:   ${latest}"
 
-echo
-echo "==> Installing"
+stage "Installing"
 
-# Already-installed versions are skipped by uv, so this is safe to re-run.
+# uv skips a version it already has, so this is safe to run again.
 uv python install "${wanted[@]}"
 
-echo
-echo "==> Setting Python ${latest} as the default 'python' on PATH"
+stage "Making Python ${latest} the default"
 
-if ! uv python install --default --preview "${latest}"; then
-    echo "note: could not install the default 'python' shim."
-    echo "      Not fatal - use 'uv run' or a project virtualenv instead."
+if uv python install --default --preview "${latest}"; then
+    info "the 'python' command now runs ${latest}"
+else
+    warn "could not install the default 'python' command."
+    warn "this is not serious. Use 'uv run' or a project instead."
 fi
-
-echo
-echo "==> Python installation complete"

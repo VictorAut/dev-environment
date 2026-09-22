@@ -75,5 +75,13 @@ fi
 
 # ------------------------------------------------------------------- mise
 #
-# mise adds its own block below this line, between markers. Do not add a
-# "mise activate" line here by hand. You would then activate it twice.
+# Keep this last. mise puts its tools at the start of PATH.
+#
+# The line is here, and not in [bootstrap.mise_shell_activate], because
+# mise copies this whole file as a dotfile. One file cannot have two
+# owners: a whole-file copy and a marked block inside the same file. mise
+# drops the block and says nothing.
+
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
