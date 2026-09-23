@@ -24,7 +24,7 @@ fail() { printf '    FAIL: %s\n' "$1" >&2; }
 
 # mise does not always run hooks and tasks with the tools on PATH. Add the
 # two directories that hold them. Without this, a script cannot find uv,
-# gh, node, or mise itself.
+# gh, or mise itself.
 for _dir in "${HOME}/.local/bin" "${HOME}/.local/share/mise/shims"; do
     case ":${PATH}:" in
         *":${_dir}:"*) ;;

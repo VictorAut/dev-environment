@@ -65,7 +65,7 @@ uv python install "${wanted[@]}"
 
 stage "Making Python ${latest} the default"
 
-if uv python install --default --preview "${latest}"; then
+if uv python install --default "${latest}"; then
     info "the 'python' command now runs ${latest}"
 else
     warn "could not install the default 'python' command."

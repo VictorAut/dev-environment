@@ -10,4 +10,6 @@
 [tools]
 uv = "latest"
 gh = "latest"
-node = "lts"
+claude-code = "latest"
+codex = "latest"
+ori = "latest"

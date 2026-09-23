@@ -30,10 +30,13 @@ stage "Host key"
 # key. Fetch the key now, so that later git commands do not stop and wait.
 if grep -q '^github.com ' "${SSH_DIR}/known_hosts" 2>/dev/null; then
     info "already known"
-else
-    ssh-keyscan -t rsa,ecdsa,ed25519 github.com \
-        >> "${SSH_DIR}/known_hosts" 2>/dev/null
+elif ssh-keyscan -t rsa,ecdsa,ed25519 github.com \
+        >> "${SSH_DIR}/known_hosts" 2>/dev/null; then
     info "added to ${SSH_DIR}/known_hosts"
+else
+    # ssh-keyscan exits non-zero when the network blocks port 22. Without
+    # this guard, set -e would stop the whole bootstrap here.
+    warn "could not reach github.com. You will be asked to accept its key."
 fi
 
 stage "Login"
@@ -124,7 +127,7 @@ else
     answer="n"
 fi
 
-if [[ ! "${answer}" =~ ^[Nn]$ ]]; then
+if [[ ! "${answer}" =~ ^[Nn]([Oo])?$ ]]; then
     info "log in to the work account. gh can hold several accounts."
     info "change account later with: gh auth switch"
     echo

@@ -17,6 +17,12 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib.sh"
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 EXTENSIONS="${REPO_ROOT}/vscode/extensions.txt"
 
+# The bootstrap also copies the list to the home directory, so this script
+# still works when it is run from somewhere else.
+if [[ ! -f "${EXTENSIONS}" ]]; then
+    EXTENSIONS="${HOME}/.config/vscode-extensions.txt"
+fi
+
 stage "Extensions"
 
 if ! command -v code >/dev/null 2>&1; then
@@ -50,7 +56,7 @@ while read -r extension; do
 
     if is_installed "${extension}"; then
         printf '    have    %s\n' "${extension}"
-    elif code --install-extension "${extension}" --force >/dev/null 2>&1; then
+    elif code --install-extension "${extension}" --force </dev/null >/dev/null 2>&1; then
         printf '    added   %s\n' "${extension}"
     else
         printf '    FAILED  %s\n' "${extension}"

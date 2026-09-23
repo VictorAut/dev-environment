@@ -1,8 +1,10 @@
 #
 # The dev-environment bootstrap installs this file.
 #
-# This is a normal file. You can edit it. You do not need the bootstrap
-# repository after the installation. You can delete the repository.
+# This is a normal file, not a link. You can edit it.
+#
+# But the bootstrap replaces it every time it runs, with no backup. Put
+# edits you want to keep in ~/.bashrc.local, or in the bootstrap repository.
 #
 
 # Run the settings below only in an interactive shell.
@@ -10,6 +12,12 @@ case $- in
   *i*) ;;
     *) return;;
 esac
+
+# Ubuntu's own .bashrc loads this, and this file replaces Ubuntu's. Without
+# the line, you lose tab completion for apt, systemctl, gh, uv and docker.
+if [[ -r /usr/share/bash-completion/bash_completion ]]; then
+  source /usr/share/bash-completion/bash_completion
+fi
 
 # ---------------------------------------------------------------- oh-my-bash
 
@@ -46,7 +54,7 @@ if [[ -r "${OSH}/oh-my-bash.sh" ]]; then
   source "${OSH}/oh-my-bash.sh"
 fi
 
-# Replace the powerbash10k prompt. This version adds an empty line at the end.
+# Replace the powerbash10k prompt. This version adds an empty line first.
 function __pb10k_ps1 {
   printf "\n%s%s%s" "$(__pb10k_top)" "$(__pb10k_bottom)" "$_omb_prompt_normal"
 }
@@ -66,6 +74,30 @@ export PYTHONDONTWRITEBYTECODE=1
 export UV_PYTHON_PREFERENCE=only-managed
 
 export EDITOR="${EDITOR:-vim}"
+
+# --------------------------------------------------------------- AI agents
+
+# The model used for personal work. Change it here, in one place.
+export AI_PERSONAL_MODEL="z-ai/glm-5.3-flash"
+
+# Claude Code is the default agent everywhere.
+#
+# Inside ~/personal it runs on OpenRouter, through "ori". Everywhere else it
+# runs on an Anthropic model, as normal. "ori" sets the OpenRouter variables
+# for that one run, so nothing else on this machine is affected.
+#
+# To force the Anthropic model inside ~/personal, type: command claude
+claude() {
+  if [[ "${PWD}/" == "${HOME}/personal/"* ]] && command -v ori >/dev/null 2>&1
+  then
+    command ori claude --model "${AI_PERSONAL_MODEL}" "$@"
+  else
+    command claude "$@"
+  fi
+}
+
+# Codex stays explicit. To run it on OpenRouter:
+#     ori codex --model "$AI_PERSONAL_MODEL"
 
 # Put settings for this machine only in ~/.bashrc.local. For example: tokens,
 # proxies, or local paths. The bootstrap never changes that file.

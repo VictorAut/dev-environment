@@ -82,6 +82,30 @@ if [[ -f "${WORK_FILE}" ]]; then
     info "~/work      work"
 fi
 
+stage "Global ignore"
+
+# .dev/ holds the notes for one change: the specification, review output.
+# It sits next to the code, because that is where an agent reads. It must
+# not appear in any project's .gitignore, because it is yours, not the
+# project's. A global ignore file keeps it out of every repository.
+IGNORE_FILE="${HOME}/.config/git/ignore"
+
+mkdir -p -- "$(dirname -- "${IGNORE_FILE}")"
+touch -- "${IGNORE_FILE}"
+
+git config --global core.excludesFile "${IGNORE_FILE}"
+
+# .dev/ holds your notes. .memsearch/ holds the memory index. Neither
+# belongs to the project.
+for pattern in '.dev/' '.memsearch/'; do
+    if grep -qxF "${pattern}" -- "${IGNORE_FILE}"; then
+        info "${pattern} is already ignored everywhere"
+    else
+        printf '%s\n' "${pattern}" >> "${IGNORE_FILE}"
+        info "added ${pattern} to ${IGNORE_FILE}"
+    fi
+done
+
 stage "Defaults"
 
 # These remove the messages that git prints on a new machine.

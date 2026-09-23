@@ -25,12 +25,9 @@ min_version = "2026.9.12"
 # ---------------------------------------------------------------------------
 # System packages
 #
-# The hook runs first. It adds the Docker package repository, because apt
-# cannot find docker-ce without it.
+# Keep this list short. Add a package when something actually fails without
+# it, not in case it might.
 # ---------------------------------------------------------------------------
-
-[bootstrap.hooks.pre-packages]
-run = "{{ config_root }}/scripts/add-docker-repo.sh"
 
 [bootstrap.packages]
 # Base
@@ -40,25 +37,15 @@ run = "{{ config_root }}/scripts/add-docker-repo.sh"
 "apt:unzip" = "latest"
 "apt:vim" = "latest"
 
-# Compilers. Some Python packages build from source during installation.
+# wslu provides wslview, which opens a Windows browser from WSL. Without it
+# "gh auth login" and "ori login" have no browser to open.
+"apt:wslu" = "latest"
+
+# Compilers, for the rare Python package with no wheel. Almost everything
+# ships a wheel now, so no -dev libraries are listed here. Add the one an
+# error message names, on the day it names it.
 "apt:build-essential" = "latest"
 "apt:pkg-config" = "latest"
-
-# Libraries that common Python packages need in order to build.
-"apt:libssl-dev" = "latest"
-"apt:libffi-dev" = "latest"
-"apt:zlib1g-dev" = "latest"
-"apt:libsqlite3-dev" = "latest"
-"apt:libxml2-dev" = "latest"
-"apt:libxslt1-dev" = "latest"
-"apt:libxmlsec1-dev" = "latest"
-
-# Docker Engine. Docker Desktop is not needed.
-"apt:docker-ce" = "latest"
-"apt:docker-ce-cli" = "latest"
-"apt:containerd.io" = "latest"
-"apt:docker-buildx-plugin" = "latest"
-"apt:docker-compose-plugin" = "latest"
 
 # ---------------------------------------------------------------------------
 # Repositories
@@ -79,6 +66,22 @@ run = "{{ config_root }}/scripts/add-docker-repo.sh"
 "~/.config/mise/config.toml" = { source = "mise/global-config.toml", mode = "copy" }
 "~/.vscode-server/data/Machine/settings.json" = { source = "vscode/settings.json", mode = "copy" }
 
+# Both AI agents read the same instructions. scripts/setup-ai.sh links
+# ~/.claude/CLAUDE.md and ~/.codex/AGENTS.md to this one file.
+"~/.config/agents/AGENTS.md" = { source = "ai/AGENTS.md", mode = "copy" }
+"~/.config/agents/spec-template.md" = { source = "ai/spec-template.md", mode = "copy" }
+"~/.config/agents/HOWTO.md" = { source = "ai/HOWTO.md", mode = "copy" }
+
+# The extension list must survive on the machine. VS Code extensions are
+# installed later, by hand, once the "code" command exists.
+"~/.config/vscode-extensions.txt" = { source = "vscode/extensions.txt", mode = "copy" }
+
+# Subagents for Claude Code. A subagent runs in its own context window, and
+# its tool list is enforced by Claude Code, not by the model. So these work
+# the same on any model.
+"~/.claude/agents/investigator.md" = { source = "ai/agents/investigator.md", mode = "copy" }
+"~/.claude/agents/reviewer.md" = { source = "ai/agents/reviewer.md", mode = "copy" }
+
 # ---------------------------------------------------------------------------
 # Shell activation
 #
@@ -91,19 +94,6 @@ run = "{{ config_root }}/scripts/add-docker-repo.sh"
 #
 # So the activation line lives in shell/bashrc instead, at the end.
 # ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
-# Privileged files
-#
-# systemd must be on, or the docker service does not start by itself.
-# A WSL restart is needed before this takes effect.
-# ---------------------------------------------------------------------------
-
-[bootstrap.files."/etc/wsl.conf"]
-source = "wsl/wsl.conf"
-owner = "root"
-group = "root"
-mode = "0644"
 
 # ---------------------------------------------------------------------------
 # Tools
@@ -119,7 +109,12 @@ mode = "0644"
 [tools]
 uv = "latest"
 gh = "latest"
-node = "lts"   # "lts" tracks the newest even-numbered (long-term) release
+
+# AI coding agents. ori is OpenRouter's launcher: "ori claude" starts the
+# Claude Code on your PATH, with OpenRouter settings for that run only.
+claude-code = "latest"
+codex = "latest"
+ori = "latest"
 
 # ---------------------------------------------------------------------------
 # Steps that cannot be declared
@@ -133,9 +128,9 @@ node = "lts"   # "lts" tracks the newest even-numbered (long-term) release
 description = "Run the steps that need a terminal"
 run = [
     "{{ config_root }}/scripts/install-pythons.sh",
-    "{{ config_root }}/scripts/setup-docker.sh",
     "{{ config_root }}/scripts/setup-git.sh",
     "{{ config_root }}/scripts/setup-ssh.sh",
+    "{{ config_root }}/scripts/setup-ai.sh",
     "{{ config_root }}/scripts/install-vscode.sh",
 ]
 

@@ -17,12 +17,17 @@ check_failed() {
 
 stage "Tool versions"
 
-for tool in mise uv git gh node docker; do
-    if command -v "${tool}" >/dev/null 2>&1; then
-        printf '    %-6s %s\n' "${tool}" "$("${tool}" --version 2>&1 | head -n1)"
-    else
+for tool in mise uv git gh claude codex ori; do
+    if ! command -v "${tool}" >/dev/null 2>&1; then
         check_failed "${tool} is not on PATH"
+        continue
     fi
+
+    # ori prints JSON when it is not writing to a terminal, so cut the
+    # output short rather than showing a stray brace.
+    version="$("${tool}" --version 2>&1 | head -n1 | cut -c1-40)"
+
+    printf '    %-6s %s\n' "${tool}" "${version}"
 done
 
 stage "Python interpreters"
@@ -90,14 +95,16 @@ for key in user.name user.email; do
     if value="$(git config --get "${key}")" && [[ -n "${value}" ]]; then
         printf '    %-11s %s\n' "${key}" "${value}"
     else
-        check_failed "git ${key} is not set"
+        # A warning, not a failure. verify.sh is the final hook, so a
+        # failure here marks the whole bootstrap as failed.
+        warn "git ${key} is not set. Run: git config --global ${key} '...'"
     fi
 done
 
 # An "includeIf gitdir" rule works only inside a real repository. So make
 # an empty one, ask git which email it picks, then remove it.
 if [[ -f "${HOME}/.gitconfig-work" && -d "${HOME}/work" ]]; then
-    probe="$(mktemp -d "${HOME}/work/.verify-XXXXXX")"
+    if probe="$(mktemp -d "${HOME}/work/.verify-XXXXXX")"; then
     git -C "${probe}" init --quiet
 
     work_email="$(git -C "${probe}" config --get user.email 2>/dev/null || true)"
@@ -110,23 +117,59 @@ if [[ -f "${HOME}/.gitconfig-work" && -d "${HOME}/work" ]]; then
     else
         check_failed "~/work uses '${work_email}', expected '${expected}'"
     fi
+    fi
 else
     warn "no work identity at ~/.gitconfig-work"
 fi
 
-stage "Docker"
+stage "AI agents"
 
-if command -v docker >/dev/null 2>&1; then
-    if id -nG "${USER}" | grep -qw docker; then
-        info "${USER} is in the docker group"
+shared="${HOME}/.config/agents/AGENTS.md"
+
+if [[ -f "${shared}" ]]; then
+    info "shared instructions at ${shared}"
+else
+    check_failed "no ${shared}"
+fi
+
+# Both agents must read the same file, or they behave differently.
+for pair in "Claude Code:${HOME}/.claude/CLAUDE.md" "Codex:${HOME}/.codex/AGENTS.md"; do
+    label="${pair%%:*}"
+    path="${pair#*:}"
+
+    if [[ "$(readlink -f "${path}" 2>/dev/null)" == "${shared}" ]]; then
+        printf '    %-12s reads the shared file\n' "${label}"
     else
-        warn "${USER} is not in the docker group yet. Run: wsl --shutdown"
+        check_failed "${label} does not read ${shared} (${path})"
     fi
+done
 
-    if docker info >/dev/null 2>&1; then
-        info "daemon is running"
+for agent in investigator reviewer; do
+    if [[ -f "${HOME}/.claude/agents/${agent}.md" ]]; then
+        printf '    %-12s subagent installed\n' "${agent}"
     else
-        warn "the docker daemon does not answer. Run: wsl --shutdown"
+        check_failed "no ~/.claude/agents/${agent}.md"
+    fi
+done
+
+if [[ -f "${HOME}/.config/agents/spec-template.md" ]]; then
+    info "spec template installed"
+else
+    check_failed "no ~/.config/agents/spec-template.md"
+fi
+
+if command -v claude >/dev/null 2>&1 \
+        && claude plugin list 2>/dev/null | grep -q 'memsearch'; then
+    info "memsearch memory installed"
+else
+    warn "memsearch is not installed. Run: claude plugin install memsearch@memsearch-plugins"
+fi
+
+if command -v ori >/dev/null 2>&1; then
+    if ori auth >/dev/null 2>&1; then
+        info "ori is logged in to OpenRouter"
+    else
+        warn "ori is not logged in. Run: ori login"
     fi
 fi
 

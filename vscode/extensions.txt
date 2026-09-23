@@ -1,4 +1,4 @@
-# VS Code xxtensions to install in the WSL host.
+# VS Code extensions to install in the WSL host.
 
 # Python
 ms-python.python
