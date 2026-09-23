@@ -27,6 +27,14 @@ min_version = "2026.9.12"
 #
 # Keep this list short. Add a package when something actually fails without
 # it, not in case it might.
+#
+# Every name here must exist on a plain Ubuntu. mise installs them all in
+# one apt command, and apt fails the whole command when one name is unknown.
+# The bootstrap then stops before it writes a single file.
+#
+# So put a package here only when it is required and always available.
+# Anything optional goes in a script, where a failure can be a warning. See
+# the "Browser" step in scripts/setup-ssh.sh.
 # ---------------------------------------------------------------------------
 
 [bootstrap.packages]
@@ -40,10 +48,6 @@ min_version = "2026.9.12"
 # tmux keeps shells, servers and test watchers alive when you close the
 # terminal. See ~/.config/agents/HOWTO.md.
 "apt:tmux" = "latest"
-
-# wslu provides wslview, which opens a Windows browser from WSL. Without it
-# "gh auth login" and "ori login" have no browser to open.
-"apt:wslu" = "latest"
 
 # Compilers, for the rare Python package with no wheel. Almost everything
 # ships a wheel now, so no -dev libraries are listed here. Add the one an

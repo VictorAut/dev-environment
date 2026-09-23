@@ -39,6 +39,26 @@ else
     warn "could not reach github.com. You will be asked to accept its key."
 fi
 
+stage "Browser"
+
+# gh and ori show a login page. WSL has no browser of its own, so they need
+# wslview to open the Windows one. wslview comes in the wslu package.
+#
+# wslu is not in mise.toml on purpose. It sits in the "universe" component,
+# and some Ubuntu releases drop it. A missing name there stops the whole
+# bootstrap. Here it is only a convenience, so a failure is a warning.
+if command -v wslview >/dev/null 2>&1; then
+    info "wslview is installed. A login page can open by itself."
+elif ! apt-cache show wslu >/dev/null 2>&1; then
+    warn "this Ubuntu has no wslu package."
+    warn "you will copy each login link into Windows by hand."
+elif sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y wslu; then
+    info "installed wslu. A login page can now open by itself."
+else
+    warn "wslu did not install."
+    warn "you will copy each login link into Windows by hand."
+fi
+
 stage "Login"
 
 # The admin:public_key scope lets gh send the SSH keys made below.

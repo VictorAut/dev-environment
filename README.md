@@ -123,6 +123,7 @@ Open a new shell when it finishes.
 | Python 3.10 to newest | `scripts/install-pythons.sh` | the list is read from uv at run time |
 | Git identities | `scripts/setup-git.sh` | one email in `~/personal`, another in `~/work` |
 | SSH keys | `scripts/setup-ssh.sh` | one key for each GitHub account |
+| wslu | `scripts/setup-ssh.sh` | opens a Windows browser. Skipped when the release has no such package |
 | VS Code extensions | `scripts/install-vscode.sh` | from `vscode/extensions.txt` |
 
 ### Why five steps are scripts
@@ -133,7 +134,7 @@ Open a new shell when it finishes.
 |---|---|
 | Python | it asks uv which versions exist, while it runs |
 | Git identities | it asks you questions |
-| SSH keys | it opens a browser |
+| SSH keys | it opens a browser, and asks GitHub for a token |
 | AI agents | it links files and logs in to OpenRouter |
 | VS Code extensions | it needs the `code` command, which may not exist yet |
 
