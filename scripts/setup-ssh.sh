@@ -70,7 +70,11 @@ elif ! interactive; then
     info "no terminal. Skipping the login."
     info "run this later: gh auth login --scopes admin:public_key"
 else
-    gh auth login --git-protocol ssh --scopes admin:public_key \
+    # --skip-ssh-key matters. With --git-protocol ssh, gh offers to make an
+    # SSH key of its own and send it to GitHub. This script makes its own
+    # named keys below. Without the flag you end up with two keys per
+    # account: gh's ~/.ssh/id_ed25519, and ours.
+    gh auth login --git-protocol ssh --scopes admin:public_key --skip-ssh-key \
         || info "login failed or cancelled. You can run it again later."
 fi
 
@@ -140,6 +144,29 @@ EOF
 
 setup_account "personal"
 
+stage "Default account"
+
+# The aliases above only match "git@github-personal:..." URLs. Every URL you
+# copy from a GitHub page says "git@github.com:...", and matches none of
+# them. ssh would then look for ~/.ssh/id_ed25519, which no longer exists,
+# and refuse the connection.
+#
+# So point plain github.com at the personal key. Work stays explicit, under
+# the github-work alias.
+if [[ -f "${CONFIG}" ]] && grep -q '^Host github\.com$' -- "${CONFIG}"; then
+    info "host github.com is already in ${CONFIG}"
+else
+    cat >> "${CONFIG}" <<EOF
+
+Host github.com
+    User git
+    IdentityFile ${SSH_DIR}/id_ed25519_personal
+    IdentitiesOnly yes
+EOF
+    chmod 600 -- "${CONFIG}"
+    info "plain github.com URLs will use the personal key"
+fi
+
 if interactive; then
     stage "Work account"
     read -r -p "    Set up a work account too? [Y/n] " answer
@@ -153,7 +180,8 @@ if [[ ! "${answer}" =~ ^[Nn]([Oo])?$ ]]; then
     echo
 
     if command -v gh >/dev/null 2>&1; then
-        gh auth login --git-protocol ssh --scopes admin:public_key || true
+        gh auth login --git-protocol ssh --scopes admin:public_key \
+            --skip-ssh-key || true
     fi
 
     setup_account "work"
