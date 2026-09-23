@@ -246,16 +246,67 @@ The useful pairing is writer and reviewer:
 
 Terminal B never saw A's reasoning, so it judges the result on its own.
 
-If both sessions will **edit** files, give them separate checkouts. Two
+If both sessions will **edit** files, give each one its own checkout. Two
 agents in one directory will overwrite each other:
 
 ```bash
-git worktree add ../liken-cache cache-ttl
-cd ../liken-cache
-claude
+claude --worktree cache-ttl
 ```
 
+This makes a separate checkout on a new branch, and starts Claude in it.
+
+It does more than `git worktree` on its own. Claude Code **refuses** any
+edit to your main checkout from inside that session. It is a rule the tool
+enforces, not a rule you ask the agent to follow. So it holds whatever
+model you are on.
+
+Two more things it does:
+
+- It offers to clean up the checkout when you leave the session.
+- It copies files named in `.worktreeinclude` into the new checkout. Put
+  `.env` in there.
+
+Run plain `claude` once in a repository before you use `--worktree` in it.
+The first run asks you to trust the directory.
+
+### Which one do I want?
+
+| You want | Use |
+|---|---|
+| a side task that would fill this conversation with noise | a subagent: `@agent-investigator ...` |
+| two changes to one repository at the same time | `claude --worktree <name>`, one per terminal |
+| to hand a task off and check back later | `claude --bg "..."`, then `claude agents` |
+| one session to tell another something | ask it: "tell the other session the migration finished" |
+
 Each session costs full price. Two focused sessions beat five vague ones.
+
+---
+
+## Several repositories at once
+
+Claude Code handles the agents. tmux handles everything around them: your
+shell, a dev server, a test watcher, three repositories open together.
+
+A tmux session keeps running when you close Windows Terminal. Claude
+background sessions survive on their own. Your servers and shells do not.
+
+```bash
+tmux new -s day        # start a session called "day"
+tmux attach -t day     # come back to it later
+```
+
+Inside tmux, press `Ctrl` `b`, let go, then the next key:
+
+| Then press | What happens |
+|---|---|
+| `d` | detach. Everything keeps running without you |
+| `c` | new window |
+| a number | switch to that window |
+| `%` | split this pane, left and right |
+| `"` | split this pane, top and bottom |
+
+One window for each repository. Each window holds that project's shell, its
+agent and its tests.
 
 ---
 

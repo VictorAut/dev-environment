@@ -37,6 +37,10 @@ min_version = "2026.9.12"
 "apt:unzip" = "latest"
 "apt:vim" = "latest"
 
+# tmux keeps shells, servers and test watchers alive when you close the
+# terminal. See ~/.config/agents/HOWTO.md.
+"apt:tmux" = "latest"
+
 # wslu provides wslview, which opens a Windows browser from WSL. Without it
 # "gh auth login" and "ori login" have no browser to open.
 "apt:wslu" = "latest"
@@ -63,6 +67,7 @@ min_version = "2026.9.12"
 
 [dotfiles]
 "~/.bashrc" = { source = "shell/bashrc", mode = "copy" }
+"~/.tmux.conf" = { source = "tmux/tmux.conf", mode = "copy" }
 "~/.config/mise/config.toml" = { source = "mise/global-config.toml", mode = "copy" }
 "~/.vscode-server/data/Machine/settings.json" = { source = "vscode/settings.json", mode = "copy" }
 

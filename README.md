@@ -108,6 +108,8 @@ Open a new shell when it finishes.
 | Item | Declared in | Notes |
 |---|---|---|
 | `curl`, `git`, `vim`, `unzip`, compilers | `[bootstrap.packages]` | no `-dev` libraries. Add one when a build asks for it |
+| tmux | `[bootstrap.packages]` | keeps shells and servers alive when you close the terminal |
+| `~/.tmux.conf` | `[dotfiles]` | copied from `tmux/tmux.conf` |
 | oh-my-bash | `[bootstrap.repos]` | theme `powerbash10k` |
 | `~/.bashrc` | `[dotfiles]` | copied from `shell/bashrc` |
 | Global mise config | `[dotfiles]` | copied from `mise/global-config.toml` |
