@@ -4,7 +4,11 @@
 # Run it on a new machine with:
 #
 #     mise bootstrap --from https://github.com/VictorAut/dev-environment.git \
-#         --yes --force-dotfiles
+#         --update --yes
+#
+# --update refreshes the apt package list before it installs anything. A
+# fresh WSL image carries an old list, which points at files Ubuntu has
+# already deleted. Without --update, apt stops with 404 Not Found.
 #
 # --yes answers every question with yes. Without it, mise stops and asks
 # before it installs packages, writes system files, and writes dotfiles.
@@ -45,10 +49,6 @@ min_version = "2026.9.12"
 "apt:unzip" = "latest"
 "apt:vim" = "latest"
 
-# tmux keeps shells, servers and test watchers alive when you close the
-# terminal. See ~/.config/agents/HOWTO.md.
-"apt:tmux" = "latest"
-
 # Compilers, for the rare Python package with no wheel. Almost everything
 # ships a wheel now, so no -dev libraries are listed here. Add the one an
 # error message names, on the day it names it.
@@ -71,7 +71,6 @@ min_version = "2026.9.12"
 
 [dotfiles]
 "~/.bashrc" = { source = "shell/bashrc", mode = "copy" }
-"~/.tmux.conf" = { source = "tmux/tmux.conf", mode = "copy" }
 "~/.config/mise/config.toml" = { source = "mise/global-config.toml", mode = "copy" }
 "~/.vscode-server/data/Machine/settings.json" = { source = "vscode/settings.json", mode = "copy" }
 

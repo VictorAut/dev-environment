@@ -71,18 +71,26 @@ Run two commands:
 curl -fsSL https://mise.run | sh
 ~/.local/bin/mise bootstrap \
     --from https://github.com/VictorAut/dev-environment.git \
-    --yes
+    --update --yes
 ```
 
 | Flag | What it does |
 |---|---|
 | `--from` | clones this repository into mise's own directory. Your home directory stays clean |
+| `--update` | runs `apt-get update` first, and re-pulls this repository |
 | `--yes` | answers yes to every question mise asks |
 
 Add `--dry-run` to see the plan and change nothing.
 
-**To run it a second time, add `--update`.** Without it, mise reuses the
-copy it cloned the first time. It will not see anything you pushed since.
+**Always use `--update`.** It matters on the very first run, not only on
+later ones. A WSL image ships with an apt package list made on the day the
+image was built. By the time you install it, Ubuntu has published newer
+versions, and has deleted the older files from its servers. apt then asks
+for a file that is gone and stops with `404 Not Found`. `--update` fetches
+the current list first.
+
+It also re-pulls this repository. Without it, mise reuses the copy it cloned
+the first time, and will not see anything you pushed since.
 
 You need **mise 2026.9.12 or newer**. The `curl` line installs the newest
 version, so a new machine is always fine. On an old machine, run
@@ -108,8 +116,6 @@ Open a new shell when it finishes.
 | Item | Declared in | Notes |
 |---|---|---|
 | `curl`, `git`, `vim`, `unzip`, compilers | `[bootstrap.packages]` | no `-dev` libraries. Add one when a build asks for it |
-| tmux | `[bootstrap.packages]` | keeps shells and servers alive when you close the terminal |
-| `~/.tmux.conf` | `[dotfiles]` | copied from `tmux/tmux.conf` |
 | oh-my-bash | `[bootstrap.repos]` | theme `powerbash10k` |
 | `~/.bashrc` | `[dotfiles]` | copied from `shell/bashrc` |
 | Global mise config | `[dotfiles]` | copied from `mise/global-config.toml` |

@@ -282,34 +282,6 @@ Each session costs full price. Two focused sessions beat five vague ones.
 
 ---
 
-## Several repositories at once
-
-Claude Code handles the agents. tmux handles everything around them: your
-shell, a dev server, a test watcher, three repositories open together.
-
-A tmux session keeps running when you close Windows Terminal. Claude
-background sessions survive on their own. Your servers and shells do not.
-
-```bash
-tmux new -s day        # start a session called "day"
-tmux attach -t day     # come back to it later
-```
-
-Inside tmux, press `Ctrl` `b`, let go, then the next key:
-
-| Then press | What happens |
-|---|---|
-| `d` | detach. Everything keeps running without you |
-| `c` | new window |
-| a number | switch to that window |
-| `%` | split this pane, left and right |
-| `"` | split this pane, top and bottom |
-
-One window for each repository. Each window holds that project's shell, its
-agent and its tests.
-
----
-
 ## The `.dev/` directory
 
 `.dev/` holds your notes for work in progress. It lives inside the project:
